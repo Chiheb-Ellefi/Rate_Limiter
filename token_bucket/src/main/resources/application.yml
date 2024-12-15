@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: token_bucket
+    device_token_ttl: 60
+    userId_bucket: 5
+    ipAddress_bucket: 4
+    deviceId_bucket: 15
+    refresh_rate: 100
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
