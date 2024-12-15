@@ -23,8 +23,12 @@ public class TokenBucket {
     private final Logger logger = Logger.getLogger(TokenBucket.class.getName());
     private final MainService mainService;
     private final  HttpServletRequest request;
-    @Value("${spring.application.refresh_rate}")
-    private  Integer refresh_rate;
+    @Value("${spring.application.user_refresh_rate}")
+    private  String userRefreshRateLimit;
+    @Value("${spring.application.device_refresh_rate}")
+    private String deviceRefreshRateLimit;
+    @Value("${spring.application.ip_refresh_rate}")
+    private String ipRefreshRateLimit;
 
     @Autowired
     public TokenBucket(HttpServletRequest request,MainService mainService) {
@@ -48,7 +52,7 @@ public class TokenBucket {
         String ip = request.getRemoteAddr();
        Long value = mainService.decreaseIpAddress(ip);
        if(value <0){
-           throw new  RateLimitReachedException(String.format("Too many request where sent from the same ip address %s try in %d seconds.",ip,refresh_rate));
+           throw new  RateLimitReachedException(String.format("Too many request where sent from the same ip address %s try in %s ms.",ip,ipRefreshRateLimit));
        }
         return joinPoint.proceed();
 
@@ -64,7 +68,7 @@ public class TokenBucket {
         Long value=mainService.decreaseUserToken(cookie.getValue());
         if ( value < 0){
 
-            throw new  RateLimitReachedException(String.format("Too many request where sent by the same user try in %d seconds.",refresh_rate));
+            throw new  RateLimitReachedException(String.format("Too many request where sent by the same user try in %s ms.",userRefreshRateLimit));
         }
 
         return joinPoint.proceed();
@@ -78,7 +82,7 @@ public class TokenBucket {
         if(cookie!=null){
             Long value=mainService.decreaseDeviceId(cookie.getValue());
             if ( value < 0){
-                throw new  RateLimitReachedException(String.format("Too many request where sent from the same device try in %d seconds.",refresh_rate));
+                throw new  RateLimitReachedException(String.format("Too many request where sent from the same device try in %s ms.",deviceRefreshRateLimit));
             }
         }
         return joinPoint.proceed();
