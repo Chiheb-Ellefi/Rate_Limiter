@@ -8,7 +8,6 @@ import com.example.token_bucket.services.MainService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -38,7 +37,7 @@ public class MainController {
         userCookie.setHttpOnly(true);
         userCookie.setSecure(true);
         response.addCookie(userCookie);
-        mainService.addUserToken(userId);
+        mainService.decreaseUserToken(userId);
         return ResponseEntity.ok("Login successful");
 
     }
