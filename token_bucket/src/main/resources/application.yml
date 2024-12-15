@@ -1,11 +1,13 @@
 spring:
   application:
     name: token_bucket
-    device_token_ttl: 60
+    device_token_ttl: 3600
     userId_bucket: 5
     ipAddress_bucket: 4
     deviceId_bucket: 15
-    refresh_rate: 100
+    user_refresh_rate: 200000
+    device_refresh_rate: 1500000
+    ip_refresh_rate: 100000
   data:
     redis:
       host: 127.0.0.1
