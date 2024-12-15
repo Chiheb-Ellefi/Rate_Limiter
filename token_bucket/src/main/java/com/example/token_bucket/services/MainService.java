@@ -1,6 +1,7 @@
 package com.example.token_bucket.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,19 +23,21 @@ public class MainService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final DefaultRedisScript<Long> redisScript;
+    private final DefaultRedisScript<Long> refreshRedisScript;
 
     @Autowired
-    MainService(RedisTemplate<String, String> redisTemplate) {
+    MainService(RedisTemplate<String, String> redisTemplate,
+                @Qualifier("redisScript") DefaultRedisScript<Long> redisScript,
+                @Qualifier("refreshRedisScript") DefaultRedisScript<Long> refreshRedisScript) {
         this.redisTemplate = redisTemplate;
-        this.redisScript = new DefaultRedisScript<>();
-        this.redisScript.setLocation(new ClassPathResource("scripts/rate_limit.lua"));
-        this.redisScript.setResultType(Long.class);
+        this.redisScript = redisScript;
+        this.refreshRedisScript = refreshRedisScript;
+
     }
-   public void addUserToken(String token){
-        redisTemplate.opsForValue().set("user:"+token,userId_bucket);
-   }
+
    public Long decreaseUserToken(String token){
-        return redisTemplate.opsForValue().decrement("user:"+token);
+       return redisTemplate.execute(redisScript, Collections.singletonList("user:"+token),String.valueOf(userId_bucket));
+
    }
    public Long decreaseIpAddress(String ip){
        return redisTemplate.execute(redisScript, Collections.singletonList("ip:"+ip),String.valueOf(ipAddress_bucket));
@@ -43,6 +46,16 @@ public class MainService {
    public Long decreaseDeviceId(String deviceId){
         return redisTemplate.execute(redisScript,Collections.singletonList("device:"+deviceId),String.valueOf(deviceId_bucket),String.valueOf(deviceId_TTL));
    }
+
+   public Long refreshUserRateLimit(){
+       return  redisTemplate.execute(refreshRedisScript,Collections.singletonList("user:*"),String.valueOf(userId_bucket));
+   }
+    public Long refreshDeviceRateLimit(){
+      return   redisTemplate.execute(refreshRedisScript,Collections.singletonList("device:*"),String.valueOf(deviceId_bucket),String.valueOf(deviceId_TTL));
+    }
+    public Long refreshIpRateLimit(){
+       return  redisTemplate.execute(refreshRedisScript,Collections.singletonList("ip:*"),String.valueOf(ipAddress_bucket));
+    }
 
 
 
